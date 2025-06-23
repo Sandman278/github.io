@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phân Tích Đầu Tư Đất Nền Hoàng Đông Sông Đà 7</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Application Structure Plan: 
+        The SPA is designed as a single-page, scrollable dashboard to guide the user through the investment analysis.
+        1. Header & Navigation: Fixed navigation for quick access to key sections.
+        2. Tổng quan Đầu tư (Investment Overview): Displays core investment details and summary.
+        3. Chi tiết Dự án Hoàng Đông (Hoang Dong Project Details): Interactive accordions for Location, Developer, Scale, Infrastructure, Legal.
+        4. Phân tích Giá & Thị trường (Price & Market Analysis): Bar chart for price comparison and textual medium-term assessment.
+        5. Kịch bản Tăng trưởng Giá (Price Growth Scenarios): Line chart for 3 price scenarios (Base, Optimistic, Conservative) and textual summaries.
+        6. Rủi ro & Cơ hội (Risks & Opportunities): HTML table for risk summary and textual opportunities.
+        7. Kết luận & Hành động (Conclusion & Actions): Overall assessment, investor considerations, next steps.
+        This structure facilitates both quick takeaways and deep dives, prioritizing user understanding and exploration over a linear report replication.
+    -->
+    <!-- Visualization & Content Choices:
+        - Investment Overview (Report User Query): Goal: Inform. Method: Styled HTML. Interaction: Static. Justification: Clear, immediate core facts.
+        - Project Details (Report Sec II.A-E): Goal: Inform. Method: Text in accordions. Interaction: Expand/collapse. Justification: Organizes dense info, reduces clutter.
+        - Price Comparison (Report Table 1, Sec III.A): Goal: Compare. Method: Bar Chart (Chart.js). Interaction: Tooltips. Justification: Visual price benchmark.
+        - Price Forecast (Report Sec IV.D): Goal: Change/Project. Method: Line Chart (Chart.js). Interaction: Tooltips, scenario toggles (implicit via legend). Justification: Dynamic price evolution.
+        - Risk Summary (Report Table 2, Sec V.D): Goal: Organize/Inform. Method: HTML Table. Interaction: Static. Justification: Clear risk presentation.
+        - Textual Summaries (Various): Goal: Inform/Explain. Method: Paragraphs/Lists. Interaction: Static/Accordion. Justification: Qualitative insights.
+        - Navigation: Goal: Organize/Navigate. Method: HTML links. Interaction: Click to scroll. Justification: Easy SPA movement.
+    -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f5f5f4; /* stone-100 */
+            color: #292524; /* neutral-800 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px; /* Adjusted for better display */
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px; /* Base height */
+            max-height: 450px; /* Max height */
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            @apply px-3 py-2 rounded-md text-sm font-medium text-stone-700 hover:bg-teal-600 hover:text-white transition-colors;
+        }
+        .nav-link.active {
+            @apply bg-teal-700 text-white;
+        }
+        .section-title {
+            @apply text-3xl font-bold text-teal-700 mb-6 text-center;
+        }
+        .card {
+            @apply bg-white p-6 rounded-xl shadow-lg;
+        }
+        .accordion-button {
+            @apply w-full flex justify-between items-center text-left text-lg font-semibold text-teal-700 p-4 rounded-lg hover:bg-stone-50 transition-colors;
+        }
+        .accordion-content {
+            @apply p-4 bg-stone-50 rounded-b-lg;
+        }
+        h3 {
+            @apply text-xl font-semibold text-teal-600 mb-3;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <nav class="container mx-auto px-4 lg:px-6 py-3 flex flex-wrap justify-between items-center">
+            <div class="text-2xl font-bold text-teal-700">Đầu Tư Hoàng Đông</div>
+            <div class="space-x-1 md:space-x-2">
+                <a href="#tong-quan" class="nav-link">Tổng Quan</a>
+                <a href="#chi-tiet-du-an" class="nav-link">Chi Tiết Dự Án</a>
+                <a href="#phan-tich-gia" class="nav-link">Phân Tích Giá</a>
+                <a href="#kich-ban-tang-truong" class="nav-link">Kịch Bản Giá</a>
+                <a href="#rui-ro-co-hoi" class="nav-link">Rủi Ro & Cơ Hội</a>
+                <a href="#ket-luan" class="nav-link">Kết Luận</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 lg:px-6 py-8">
+        <section id="tong-quan" class="py-12">
+            <h2 class="section-title">Tổng Quan Khoản Đầu Tư</h2>
+            <div class="card max-w-3xl mx-auto">
+                <p class="text-center text-gray-700 mb-6 text-lg">Báo cáo này đánh giá cơ hội đầu tư vào lô đất liền kề tại dự án Khu đô thị Hoàng Đông Sông Đà 7, Hà Nam, với tầm nhìn trung hạn (3-5 năm).</p>
+                <div class="grid md:grid-cols-2 gap-6 text-gray-800">
+                    <div>
+                        <h3 class="border-b-2 border-teal-500 pb-2">Thông tin Lô Đất</h3>
+                        <p><strong>Mã lô:</strong> LK11 căn 09</p>
+                        <p><strong>Diện tích:</strong> 126 m²</p>
+                        <p><strong>Giá đề xuất:</strong> 34,5 triệu VNĐ/m²</p>
+                        <p><strong>Tổng giá trị:</strong> <span class="font-bold text-teal-600">4,347 tỷ VNĐ</span></p>
+                        <p><strong>Thời điểm mua dự kiến:</strong> Tháng 6/2025</p>
+                        <p><strong>Pháp lý:</strong> Đã có Giấy chứng nhận quyền sử dụng đất (sổ đỏ)</p>
+                    </div>
+                    <div>
+                        <h3 class="border-b-2 border-teal-500 pb-2">Mục Tiêu Nhà Đầu Tư</h3>
+                        <p>Đầu tư trung hạn: 3-5 năm.</p>
+                        <p>Quan tâm đến tiềm năng tăng trưởng giá, ảnh hưởng từ các giai đoạn phát triển tiếp theo của dự án.</p>
+                        <p>Đánh giá khó khăn, thách thức và triển vọng.</p>
+                    </div>
+                </div>
+                 <p class="mt-6 text-sm text-gray-600">Phân tích này dựa trên báo cáo chi tiết được cung cấp, tập trung vào các yếu tố vĩ mô, vi mô, năng lực chủ đầu tư và đặc điểm sản phẩm để đưa ra nhận định khách quan.</p>
+            </div>
+        </section>
+
+        <section id="chi-tiet-du-an" class="py-12 bg-stone-50 rounded-xl">
+            <h2 class="section-title">Chi Tiết Dự Án Hoàng Đông Sông Đà 7 (Giai đoạn 1)</h2>
+            <div class="max-w-4xl mx-auto space-y-4">
+                <div class="card">
+                    <button class="accordion-button" data-target="content-location">
+                        <span>A. Vị trí địa lý và khả năng kết nối giao thông</span>
+                        <span class="transform transition-transform duration-300">&#x25BC;</span>
+                    </button>
+                    <div id="content-location" class="accordion-content hidden">
+                        <p>Dự án tọa lạc tại phường Hoàng Đông, thị xã Duy Tiên, tỉnh Hà Nam, ngay ngã ba Quốc Lộ 1A và đường vào Khu du lịch Tam Chúc. Vị trí chiến lược, kết nối thuận lợi đến Hà Nội, TP. Phủ Lý và các KCN Đồng Văn 1-5. Gần trường FPT Hà Nam và Khu Đại học Nam Cao.</p>
+                        <p class="mt-2">Sự hội tụ này tạo hệ sinh thái kinh tế - xã hội đa dạng, nền tảng cho phát triển giá trị bất động sản, cộng hưởng từ sự phát triển chung của thị xã Duy Tiên.</p>
+                    </div>
+                </div>
+                 <div class="card">
+                    <button class="accordion-button" data-target="content-developer">
+                        <span>B. Thông tin chủ đầu tư: Urinco7</span>
+                        <span class="transform transition-transform duration-300">&#x25BC;</span>
+                    </button>
+                    <div id="content-developer" class="accordion-content hidden">
+                        <p>Công ty CP Đầu tư Đô thị và KCN Sông Đà 7 (Urinco7), thành lập 2007. Ông Nguyễn Mạnh Thắng là Chủ tịch HĐQT kiêm TGĐ, sở hữu 79,78% vốn (2018-2019).</p>
+                        <p class="mt-2">Urinco7 là "nhánh nhỏ" của CTCP Sông Đà 7 (SD7), đã thoái vốn nhà nước, 100% tư nhân. Kinh nghiệm: dự án nhà ở cho cán bộ tại Hà Nội (Xuân Phương, Bệnh viện 103, 90 Nguyễn Tuân), KĐT Việt Hàn (Thái Nguyên).</p>
+                        <p class="mt-2">Lưu ý: Urinco7 là thực thể tư nhân, thông tin tài chính có thể không công khai như SD7. Cần đánh giá thận trọng năng lực thực tế và cam kết của Urinco7, không mặc định uy tín như thương hiệu "Sông Đà" nói chung.</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <button class="accordion-button" data-target="content-scale">
+                        <span>C. Quy mô, quy hoạch và sản phẩm (Giai đoạn 1)</span>
+                        <span class="transform transition-transform duration-300">&#x25BC;</span>
+                    </button>
+                    <div id="content-scale" class="accordion-content hidden">
+                        <p>Tổng diện tích Giai đoạn 1: 12,74 ha (một số nguồn 13,7-13,73 ha). Tổng sản phẩm: 498 lô, dân số dự kiến 1.992 người.</p>
+                        <p class="mt-2"><strong>Sản phẩm chính:</strong></p>
+                        <ul class="list-disc list-inside ml-4">
+                            <li><strong>Đất nền liền kề:</strong> 412 lô. Diện tích: 100m² - 189m². Mật độ XD 80%, cao tối đa 4 tầng. Không giới hạn thời gian xây dựng.</li>
+                            <li><strong>Shophouse:</strong> 86 lô. Xây thô, hoàn thiện mặt ngoài. Diện tích: 108m² - 177m². Mặt tiền 6m, cao 4-4,5 tầng. Mật độ XD 75%.</li>
+                        </ul>
+                        <p class="mt-2">Quy mô GĐ1 vừa phải, tập trung sản phẩm được ưa chuộng. Hạ tầng kỹ thuật và một số hạ tầng xã hội cơ bản (đường, cấp thoát nước, điện, cây xanh, nhà văn hóa) được đầu tư đồng bộ, tạo tính tự chủ cho khu dân cư.</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <button class="accordion-button" data-target="content-status">
+                        <span>D. Hiện trạng phát triển và hạ tầng kỹ thuật (Giai đoạn 1)</span>
+                         <span class="transform transition-transform duration-300">&#x25BC;</span>
+                    </button>
+                    <div id="content-status" class="accordion-content hidden">
+                        <p>Triển khai: 2022 - 2025. Khởi công: Quý II/2024.</p>
+                        <p class="mt-2">Tháng 11/2024: Hạ tầng giao thông nội khu cơ bản hoàn thành. Shophouse đang xây dựng.</p>
+                        <p class="mt-2">Tháng 3/2025: Nghiệm thu hoàn thành hạ tầng kỹ thuật GĐ1 (san nền, đường, thoát nước, nhà văn hóa, chiếu sáng, cấp nước, cây xanh, trạm xử lý nước thải). Đây là cơ sở bàn giao đất và cấp sổ đỏ (dự kiến tháng 5/2025).</p>
+                        <p class="mt-2">Lợi thế: Giảm rủi ro chậm tiến độ. Khi NĐT mua (tháng 6/2025), hạ tầng đã cơ bản hoàn thiện.</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <button class="accordion-button" data-target="content-legal">
+                        <span>E. Tính pháp lý và hồ sơ dự án (Giai đoạn 1)</span>
+                        <span class="transform transition-transform duration-300">&#x25BC;</span>
+                    </button>
+                    <div id="content-legal" class="accordion-content hidden">
+                        <p>Phê duyệt chủ trương đầu tư: Quyết định số 104/QĐ-UBND (20/01/2022) của UBND tỉnh Hà Nam.</p>
+                        <p class="mt-2">Giấy phép xây dựng: Số 2317/GPXD (15/09/2023) của Sở Xây dựng Hà Nam.</p>
+                        <p class="mt-2"><strong>Đặc biệt quan trọng:</strong> Dự án đã được cấp sổ đỏ từng lô. Văn bản số 557/SXD-QLN của Sở Xây dựng Hà Nam (01/04/2025) xác nhận 412 lô đất nền đủ điều kiện chuyển nhượng, không bị thế chấp. Chủ đầu tư đã hoàn thành nghĩa vụ tài chính về đất đai.</p>
+                        <p class="mt-2">Pháp lý GĐ1 hoàn chỉnh, minh bạch là điểm cộng lớn, đảm bảo an toàn và thanh khoản cho nhà đầu tư.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="phan-tich-gia" class="py-12">
+            <h2 class="section-title">Phân Tích Giá Đầu Tư & Thị Trường</h2>
+            <div class="grid md:grid-cols-2 gap-8 items-start">
+                <div class="card">
+                    <h3>A. So sánh giá đầu tư lô LK11 căn 09 (34,5 tr/m²) với thị trường</h3>
+                     <p class="text-sm text-gray-600 mb-4">Biểu đồ so sánh giá đất nền (triệu VNĐ/m²) tại KĐT Hoàng Đông Sông Đà 7 và các khu vực lân cận (Q4/2024 – Q2/2025). Lô LK11 căn 09 (126m², đã có sổ) có giá 34,5 tr/m².</p>
+                    <div class="chart-container">
+                        <canvas id="priceComparisonChart"></canvas>
+                    </div>
+                    <p class="mt-4 text-sm text-gray-700"><strong>Nhận xét:</strong> Giá 34,5 tr/m² (đã có sổ đỏ) cho lô 126m² là ở ngưỡng khá cao so với các giao dịch lô nhỏ hơn (108m²) tại dự án này trước đó (18-31 tr/m²). Tuy nhiên, nó có thể chấp nhận được do: pháp lý hoàn chỉnh (sổ đỏ), diện tích lớn hơn, thời điểm mua (T6/2025, giá có thể đã tăng), và nếu vị trí lô LK11-09 ưu việt. So với các lô "chờ sổ" hoặc vị trí đắc địa khác (36-40 tr/m²), mức giá này phản ánh giá trị pháp lý và tiềm năng. Cần thẩm định vị trí cụ thể lô LK11-09.</p>
+                </div>
+                <div class="card">
+                    <h3>B. Đánh giá trong khung thời gian đầu tư trung hạn (3-5 năm)</h3>
+                    <p>Thời điểm mua T6/2025 có thể thuận lợi, thị trường BĐS được dự báo phục hồi từ Q2/2025 - đầu 2026. Luật Đất đai, Nhà ở, Kinh doanh BĐS (sửa đổi) có hiệu lực từ 2025 kỳ vọng tác động tích cực.</p>
+                    <p class="mt-2">Trong 3-5 năm tới, các yếu tố thúc đẩy giá trị BĐS tại Hoàng Đông:</p>
+                    <ul class="list-disc list-inside ml-4 space-y-1">
+                        <li>Lấp đầy KCN Đồng Văn.</li>
+                        <li>Hoàn thiện và thu hút sinh viên của Khu Đại học Nam Cao.</li>
+                        <li>Triển khai các KĐT mới quy mô lớn tại Duy Tiên.</li>
+                    </ul>
+                    <p class="mt-2">Lô đất đã có sổ đỏ là lợi thế thanh khoản và tăng giá. Tuy nhiên, với giá đầu vào 34,5 tr/m², NĐT cần kỳ vọng vào sự tăng trưởng mạnh mẽ của khu vực để đạt lợi nhuận hấp dẫn. Cần chuẩn bị cho biến động ngắn hạn của thị trường.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="kich-ban-tang-truong" class="py-12 bg-stone-50 rounded-xl">
+            <h2 class="section-title">Tiềm Năng Tăng Giá & Kịch Bản Phát Triển</h2>
+             <div class="card max-w-4xl mx-auto mb-8">
+                <h3>A. Các yếu tố vĩ mô và vi mô tác động</h3>
+                <ul class="list-disc list-inside space-y-1">
+                    <li><strong>Phát triển kinh tế vùng:</strong> Hà Nam mục tiêu GRDP 11,2%/năm, đô thị hóa >58% vào 2030. Thu hút FDI tốt.</li>
+                    <li><strong>Nâng cấp hạ tầng:</strong> Cao tốc Pháp Vân-Cầu Giẽ, QL1A, QL21, Vành đai 5 Vùng Thủ đô. Quy hoạch Duy Tiên phát triển đô thị.</li>
+                    <li><strong>KCN Đồng Văn & Đại học Nam Cao:</strong> Các KCN thu hút hàng chục ngàn lao động. Khu Đại học Nam Cao (17 trường) hình thành cộng đồng trí thức, tăng nhu cầu nhà ở và dịch vụ.</li>
+                    <li><strong>"Tam giác phát triển" (Công nghiệp - Đô thị - Dịch vụ):</strong> Sự cộng hưởng này là lợi thế dài hạn cho BĐS khu vực.</li>
+                </ul>
+            </div>
+            <div class="card max-w-4xl mx-auto mb-8">
+                <h3>B. Triển vọng Giai đoạn 2, 3 của dự án Hoàng Đông Sông Đà 7</h3>
+                <p>Hiện tại, thông tin chi tiết và chính thức về kế hoạch triển khai Giai đoạn 2, 3 của dự án là rất hạn chế. Các nguồn chỉ ngầm chỉ khả năng mở rộng nhưng không có chi tiết về quy mô, sản phẩm, thời gian, pháp lý. Văn bản của Sở Xây dựng không đề cập đến GĐ2, 3.</p>
+                <p class="mt-2"><strong>Lưu ý:</strong> Việc kỳ vọng giá GĐ1 tăng đột biến *chỉ vì* các giai đoạn sau của *chính dự án này* là chưa có cơ sở vững chắc. Tiềm năng tăng giá nên dựa vào hoàn thiện GĐ1, phát triển chung của Duy Tiên và các dự án lớn khác.</p>
+            </div>
+            <div class="card max-w-4xl mx-auto mb-8">
+                 <h3>C. Khả năng mở rộng hoặc các dự án mới trong khu vực</h3>
+                <p>Thị xã Duy Tiên đang kêu gọi đầu tư nhiều KĐT mới (2025-2032) như KĐT Tiên Hiệp, Tiên Sơn, Tiên Ngoại, Châu Sơn, Đọi Sơn, Đông Nam Tiên Sơn với tổng vốn đầu tư hàng chục ngàn tỷ đồng.</p>
+                <p class="mt-2">Tại Hoàng Đông: Dự án KĐT kết hợp chỉnh trang KDC phía Nam tổ dân phố Hoàng Lý (vốn >938 tỷ, 4ha, đấu thầu T7/2025).</p>
+                <p class="mt-2"><strong>Tác động:</strong></p>
+                <ul class="list-disc list-inside ml-4">
+                    <li><strong>Tích cực:</strong> Thúc đẩy hạ tầng, thu hút dân cư, tạo mặt bằng giá trị BĐS mới. Dự án Hoàng Đông Sông Đà 7 (GĐ1) có thể "đón sóng".</li>
+                    <li><strong>Thách thức:</strong> Nguồn cung lớn có thể tạo áp lực cạnh tranh về giá và thanh khoản nếu thị trường không hấp thụ kịp.</li>
+                </ul>
+                 <p class="mt-2">Động lực tăng trưởng chính có thể đến từ phát triển chung của Duy Tiên và các đại dự án lân cận.</p>
+            </div>
+            <div class="card max-w-4xl mx-auto">
+                <h3>D. Dự báo diễn biến giá (tham khảo cho lô LK11 căn 09, 34,5 tr/m²)</h3>
+                <p class="text-sm text-gray-600 mb-4">Biểu đồ thể hiện các kịch bản tăng giá dự kiến trong 3-5 năm (tỷ lệ tăng trung bình hàng năm).</p>
+                <div class="chart-container">
+                    <canvas id="priceForecastChart"></canvas>
+                </div>
+                <div class="mt-4 grid md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                        <h4 class="font-semibold text-sky-600">Kịch bản Cơ sở (10-15%/năm)</h4>
+                        <p>Sau 3 năm: 45,9 - 52,5 tr/m²</p>
+                        <p>Sau 5 năm: 55,6 - 69,4 tr/m²</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-green-600">Kịch bản Tích cực (15-25%/năm)</h4>
+                        <p>Sau 3 năm: 52,5 - 67,4 tr/m²</p>
+                        <p>Sau 5 năm: 69,4 - 105,3 tr/m²</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-orange-600">Kịch bản Thận trọng (5-8%/năm)</h4>
+                        <p>Sau 3 năm: 39,9 - 43,5 tr/m²</p>
+                        <p>Sau 5 năm: 44,0 - 49,2 tr/m²</p>
+                    </div>
+                </div>
+                <p class="mt-3 text-xs text-gray-500">Lưu ý: Các con số trên chỉ mang tính tham khảo, dựa trên phân tích định tính. Cần cập nhật thông tin thị trường liên tục.</p>
+            </div>
+        </section>
+
+        <section id="rui-ro-co-hoi" class="py-12">
+            <h2 class="section-title">Khó Khăn, Thách Thức & Cơ Hội</h2>
+            <div class="max-w-5xl mx-auto">
+                <div class="card mb-8">
+                    <h3>A. Khó khăn, Thách thức và Rủi ro Tiềm ẩn</h3>
+                     <p class="text-sm text-gray-600 mb-4">Bảng tổng hợp các rủi ro tiềm ẩn và yếu tố giảm thiểu cho nhà đầu tư.</p>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-stone-200">
+                            <thead class="bg-stone-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Loại Rủi Ro</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Mô Tả</th>
+                                    <th class="px-4 py-3 text-left text-xs font-medium text-stone-500 uppercase tracking-wider">Biện Pháp Giảm Thiểu/Lưu Ý</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-stone-200 text-sm">
+                                <tr>
+                                    <td class="px-4 py-3 font-medium">Thị trường</td>
+                                    <td class="px-4 py-3">Biến động giá theo chu kỳ, lãi suất, chính sách tín dụng.</td>
+                                    <td class="px-4 py-3">Đa dạng hóa danh mục, xác định rõ mục tiêu & thời gian, chuẩn bị dòng tiền, theo dõi thị trường.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-medium">Thanh khoản</td>
+                                    <td class="px-4 py-3">Khó bán nếu thị trường trầm lắng hoặc giá kỳ vọng quá cao.</td>
+                                    <td class="px-4 py-3">Chọn lô vị trí đẹp (thẩm định LK11-09), định giá hợp lý. Sổ đỏ là lợi thế lớn.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-medium">Pháp lý (GĐ tương lai)</td>
+                                    <td class="px-4 py-3">Rủi ro nếu kỳ vọng vào GĐ2,3 của chính dự án này mà chưa có phê duyệt.</td>
+                                    <td class="px-4 py-3">Tin vào pháp lý GĐ1 đã công bố. Thận trọng với thông tin chưa xác thực về mở rộng.</td>
+                                </tr>
+                                 <tr>
+                                    <td class="px-4 py-3 font-medium">Cạnh tranh</td>
+                                    <td class="px-4 py-3">Áp lực từ nguồn cung lớn của các dự án mới tại Duy Tiên.</td>
+                                    <td class="px-4 py-3">Tập trung lợi thế riêng của dự án (pháp lý GĐ1, vị trí). So sánh kỹ.</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-3 font-medium">Chủ đầu tư (Urinco7)</td>
+                                    <td class="px-4 py-3">Năng lực tài chính, kinh nghiệm, cam kết phát triển tiện ích & vận hành dài hạn.</td>
+                                    <td class="px-4 py-3">Tìm hiểu kỹ CĐT. Yêu cầu rõ kế hoạch tiện ích, phí quản lý. Sổ đỏ giảm rủi ro ban đầu.</td>
+                                </tr>
+                                 <tr>
+                                    <td class="px-4 py-3 font-medium">Tiện ích</td>
+                                    <td class="px-4 py-3">Các tiện ích cao cấp (TTTM, trường học nội khu) có thể chậm hoặc không như quảng cáo.</td>
+                                    <td class="px-4 py-3">Yêu cầu CĐT cung cấp lộ trình. Đánh giá giá trị dựa trên tiện ích hiện hữu/chắc chắn.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>B. Triển vọng và Cơ hội Đầu tư</h3>
+                    <ul class="list-disc list-inside space-y-2">
+                        <li><strong>Tiềm năng tăng trưởng dài hạn của tỉnh Hà Nam:</strong> Quy hoạch tỉnh tham vọng, mục tiêu GRDP 11,2%/năm, đô thị hóa >58% (2030). Chính sách thu hút đầu tư tốt.</li>
+                        <li><strong>Nhu cầu từ KCN và đô thị hóa:</strong> Lực lượng lao động lớn từ các KCN (Đồng Văn I-IV) tạo nhu cầu nhà ở thực. Quá trình đô thị hóa tăng nhu cầu nhà ở đô thị.</li>
+                        <li><strong>Lợi thế vị trí chiến lược của dự án:</strong> Gần KCN, trục giao thông, Khu Đại học Nam Cao. Hưởng lợi từ xu hướng dịch chuyển đầu tư từ Hà Nội ra các tỉnh vệ tinh. Dự án với pháp lý GĐ1 hoàn chỉnh (lô LK11-09 đã có sổ đỏ) và giá vào chấp nhận được có nhiều cơ hội.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="ket-luan" class="py-12 bg-stone-50 rounded-xl">
+            <h2 class="section-title">Kết Luận và Khuyến Nghị</h2>
+            <div class="max-w-4xl mx-auto space-y-6">
+                <div class="card">
+                    <h3>A. Đánh giá tổng thể về cơ hội đầu tư</h3>
+                    <p>Đầu tư vào lô LK11 căn 09 (126m², 34,5tr/m², đã có sổ đỏ) tại KĐT Hoàng Đông Sông Đà 7 là cơ hội <strong>có tiềm năng sinh lời trong trung hạn (3-5 năm)</strong>, tuy nhiên mức giá đầu vào cần cân nhắc kỹ.</p>
+                    <p class="mt-2"><strong>Điểm thuận lợi chính:</strong></p>
+                    <ol class="list-decimal list-inside ml-4 space-y-1">
+                        <li>Pháp lý lô đất và GĐ1 rất tốt (sổ đỏ, đủ ĐK chuyển nhượng, hạ tầng hoàn thiện).</li>
+                        <li>Mức giá vào (34,5tr/m²) khá cao so với giao dịch trước đó của lô nhỏ hơn, nhưng có thể chấp nhận được nếu vị trí lô LK11-09 ưu việt và so với thị trường BĐS có sổ đỏ.</li>
+                        <li>Tiềm năng phát triển mạnh mẽ của khu vực (KCN Đồng Văn, Đại học Nam Cao, các KĐT mới).</li>
+                    </ol>
+                     <p class="mt-2"><strong>Khó khăn, rủi ro cần cân nhắc:</strong> Biến động thị trường, cạnh tranh nguồn cung mới, thiếu thông tin rõ ràng về GĐ2,3 của chính dự án, năng lực dài hạn của CĐT Urinco7.</p>
+                </div>
+                <div class="card">
+                    <h3>B. Các yếu tố then chốt nhà đầu tư cần cân nhắc</h3>
+                     <ol class="list-decimal list-inside ml-4 space-y-1">
+                        <li>Xác minh chi tiết pháp lý lô LK11 căn 09 (bản gốc sổ đỏ).</li>
+                        <li>Đánh giá vị trí cụ thể của lô đất trong tổng thể dự án (ảnh hưởng tăng giá, thanh khoản).</li>
+                        <li>Theo dõi sát thông tin thị trường, quy hoạch, tiến độ các dự án lớn.</li>
+                        <li>Tìm hiểu kỹ kế hoạch phát triển tiện ích và quản lý vận hành của CĐT.</li>
+                        <li>Không quá phụ thuộc kỳ vọng GĐ2,3 của chính dự án khi chưa có thông tin chính thức.</li>
+                        <li>Khả năng tài chính cá nhân, kế hoạch dòng tiền.</li>
+                    </ol>
+                </div>
+                <div class="card">
+                    <h3>C. Đề xuất các bước thẩm định tiếp theo</h3>
+                    <ol class="list-decimal list-inside ml-4 space-y-1">
+                        <li><strong>Thực địa dự án:</strong> Tham quan dự án và vị trí lô LK11 căn 09.</li>
+                        <li><strong>Làm việc với CĐT/bên bán:</strong> Yêu cầu thông tin chính xác về lô đất, giá, chính sách, cam kết.</li>
+                        <li><strong>Tham khảo chuyên gia độc lập:</strong> Luật sư BĐS, chuyên gia tư vấn BĐS (nếu cần).</li>
+                        <li><strong>Lập kế hoạch tài chính chi tiết:</strong> Tổng chi phí, nguồn vốn, kế hoạch dòng tiền.</li>
+                        <li><strong>So sánh với cơ hội đầu tư khác:</strong> Đảm bảo đây là phương án tối ưu.</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-teal-800 text-white text-center py-6 mt-12">
+        <p>&copy; 2025 - Phân Tích Đầu Tư Bất Động Sản Hoàng Đông. Thông tin chỉ mang tính chất tham khảo.</p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Accordion functionality
+            const accordionButtons = document.querySelectorAll('.accordion-button');
+            accordionButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetId = button.getAttribute('data-target');
+                    const targetContent = document.getElementById(targetId);
+                    const icon = button.querySelector('span:last-child');
+
+                    if (targetContent.classList.contains('hidden')) {
+                        targetContent.classList.remove('hidden');
+                        icon.style.transform = 'rotate(180deg)';
+                    } else {
+                        targetContent.classList.add('hidden');
+                        icon.style.transform = 'rotate(0deg)';
+                    }
+                });
+            });
+
+            // Smooth scroll for nav links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+            
+            // Active nav link on scroll
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            window.onscroll = () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 100) { // Adjusted offset for better active state
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').substring(1) === current) {
+                        link.classList.add('active');
+                    }
+                });
+            };
+
+
+            // Chart.js: Price Comparison Chart
+            const priceComparisonCtx = document.getElementById('priceComparisonChart').getContext('2d');
+            new Chart(priceComparisonCtx, {
+                type: 'bar',
+                data: {
+                    labels: [
+                        'LK11-09 (NĐT)', 
+                        'KĐT HĐSĐ7 (108m²-T5/25)', 
+                        'KĐT HĐSĐ7 (108m²-T4/25 Cao)', 
+                        'KĐT HĐSĐ7 (108m²-T4/25 Thấp)',
+                        'Trung Đông HHT (100m²-T5/25)',
+                        'Đất Hoàng Lý (90m²-T5/25)'
+                    ],
+                    datasets: [{
+                        label: 'Đơn giá (triệu VNĐ/m²)',
+                        data: [34.5, 31.0, 30.0, 18.0, 36.0, 40.0],
+                        backgroundColor: [
+                            'rgba(20, 184, 166, 0.7)', // teal-500
+                            'rgba(13, 148, 136, 0.7)', // teal-600
+                            'rgba(15, 118, 110, 0.7)', // teal-700
+                            'rgba(17, 94, 89, 0.7)',   // teal-800
+                            'rgba(6, 78, 74, 0.7)',    // teal-900
+                            'rgba(100, 116, 139, 0.7)' // slate-500
+                        ],
+                        borderColor: [
+                            'rgb(20, 184, 166)',
+                            'rgb(13, 148, 136)',
+                            'rgb(15, 118, 110)',
+                            'rgb(17, 94, 89)',
+                            'rgb(6, 78, 74)',
+                            'rgb(100, 116, 139)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Triệu VNĐ/m²'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    const label = this.getLabelForValue(value);
+                                    if (label.length > 16) { // Max 16 chars before trying to split
+                                        // Simple split logic, can be improved
+                                        const parts = label.split(' ');
+                                        if (parts.length > 1 && parts[0].length < 16) {
+                                           return [parts.slice(0, Math.ceil(parts.length/2)).join(' '), parts.slice(Math.ceil(parts.length/2)).join(' ')];
+                                        }
+                                        return label.substring(0,15) + '...';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + ' tr/m²';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Chart.js: Price Forecast Chart
+            const priceForecastCtx = document.getElementById('priceForecastChart').getContext('2d');
+            const initialPrice = 34.5;
+            const years = ['Năm 0 (2025)', 'Năm 1', 'Năm 2', 'Năm 3', 'Năm 4', 'Năm 5'];
+            
+            // Calculate average growth for simplicity in line chart, actual ranges are in text
+            const baseGrowth = 0.125; // Avg of 10-15%
+            const optimisticGrowth = 0.20; // Avg of 15-25%
+            const conservativeGrowth = 0.065; // Avg of 5-8%
+
+            function calculatePrices(growth) {
+                let prices = [initialPrice];
+                for (let i = 1; i <= 5; i++) {
+                    prices.push(parseFloat((prices[i-1] * (1 + growth)).toFixed(1)));
+                }
+                return prices;
+            }
+
+            new Chart(priceForecastCtx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            label: 'Kịch bản Cơ sở (TB 12.5%/năm)',
+                            data: calculatePrices(baseGrowth),
+                            borderColor: 'rgb(59, 130, 246)', // blue-500
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Kịch bản Tích cực (TB 20%/năm)',
+                            data: calculatePrices(optimisticGrowth),
+                            borderColor: 'rgb(34, 197, 94)', // green-500
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            fill: false,
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Kịch bản Thận trọng (TB 6.5%/năm)',
+                            data: calculatePrices(conservativeGrowth),
+                            borderColor: 'rgb(249, 115, 22)', // orange-500
+                            backgroundColor: 'rgba(249, 115, 22, 0.1)',
+                            fill: false,
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: false, // Start near the initial price
+                            title: {
+                                display: true,
+                                text: 'Giá Dự Kiến (triệu VNĐ/m²)'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label.split(' (')[0] || ''; // Get scenario name before percentage
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += context.parsed.y + ' tr/m²';
+                                    }
+                                    return label;
+                                }
+                            }
+                        },
+                         legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
